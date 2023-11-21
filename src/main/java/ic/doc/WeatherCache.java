@@ -31,7 +31,11 @@ public class WeatherCache {
                 return forecastWithTime.getForecast();
             } else {
 //                Refresh hashmap if 1 hour has passed
-//                weatherMap.remove(region);
+//                Fetch from the third party if 1 hour has passed and add to the cache, remove the old entry
+                Forecast newForecast = forecaster.forecastFor(region, day);
+                weatherMap.remove(region);
+                weatherMap.computeIfAbsent(region, k -> new HashMap<>()).put(day, new ForecastWithTime(newForecast));
+                return newForecast;
             }
         } else {
             // if cache doesn't contain the forecast look into the third party client
