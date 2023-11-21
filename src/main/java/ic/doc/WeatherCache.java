@@ -5,11 +5,12 @@ import com.weather.Forecast;
 import com.weather.Forecaster;
 import com.weather.Region;
 
+import java.time.Clock;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class WeatherCache {
+public class WeatherCache implements FakeClock {
     private Forecaster forecaster;
     private Map<Region, Map<Day, ForecastWithTime>> weatherMap;
     private final int size;
@@ -27,7 +28,7 @@ public class WeatherCache {
         if (weatherMap.containsKey(region) && weatherMap.get(region).containsKey(day)) {
             ForecastWithTime forecastWithTime = weatherMap.get(region).get(day);
             // if time elapsed is less than an hour
-            if (currentTime - forecastWithTime.getTimestamp() < HOUR) {
+            if (hasPassedTime(currentTime, forecastWithTime, HOUR)) {
                 return forecastWithTime.getForecast();
             } else {
 //                Refresh hashmap if 1 hour has passed
@@ -48,6 +49,19 @@ public class WeatherCache {
             weatherMap.computeIfAbsent(region, k -> new HashMap<>()).put(day, new ForecastWithTime(newForecast));
             return newForecast;
         }
+    }
+
+    @Override
+    public boolean hasPassedTime(long currentTime, ForecastWithTime forecastWithTime, long duration) {
+        return currentTime - forecastWithTime.getTimestamp() < duration;
+    }
+
+    public int getSize() {
+        return weatherMap.size();
+    }
+
+    public boolean cacheContainsForecast(Region region, Day day) {
+        return weatherMap.containsKey(region) && weatherMap.get(region).containsKey(day);
     }
 
 
